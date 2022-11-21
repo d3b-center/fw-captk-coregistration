@@ -1,0 +1,91 @@
+#!/bin/bash
+#
+#	template based on:  https://github.com/scitran-apps/fsl-bet/blob/master/run
+#
+#   DeepMedic needs at least 6 GB memory limit (fails at 4GB)
+#
+
+CONTAINER="[captk-coregistration]"
+echo -e "$CONTAINER  Initiated"
+
+###############################################################################
+## Built to flywheel-v0 spec.
+FLYWHEEL_BASE=/flywheel/v0
+OUTPUT_DIR=$FLYWHEEL_BASE/output
+moving_im_DIR=$FLYWHEEL_BASE/input/moving_image
+fixed_im_DIR=$FLYWHEEL_BASE/input/fixed_image
+MANIFEST=$FLYWHEEL_BASE/manifest.json
+CONFIG_FILE=$FLYWHEEL_BASE/config.json
+
+###############################################################################
+## Configure the ENV
+export USER=Flywheel
+
+###############################################################################
+## Execute the main processes
+function jsonValue() {
+KEY=$1
+num=$2
+awk -F"[,:}]" '{for(i=1;i<=NF;i++){if($i~/'$KEY'\042/){print $(i+1)}}}' | tr -d '"' | sed -n ${num}p
+}
+
+## get all user configurations
+if [[ -f $CONFIG_FILE ]]; then
+  echo "$CONTAINER  $CONFIG_FILE found. Loading config..."
+
+  reg_type="$(cat $CONFIG_FILE | jsonValue registration_type)"
+  intermediate_files="$(cat $CONFIG_FILE | jsonValue intermediate_files)"
+  output_fn="$(cat $CONFIG_FILE | jsonValue output_file_name)"
+
+else
+  echo "$CONTAINER  $CONFIG_FILE not found. Loading defaults from $MANIFEST..."
+
+  reg_type="$(cat $MANIFEST | jsonValue registration_type default)"
+  intermediate_files="$(cat $MANIFEST | jsonValue intermediate_files default)"
+  output_fn="$(cat $MANIFEST | jsonValue output_file_name default)"
+
+fi
+
+## Find the input files
+moving_im_file=$(find $moving_im_DIR/* -maxdepth 0 -type f -name "*.nii*")
+fixed_im_file=$(find $fixed_im_DIR/* -maxdepth 0 -type f -name "*.nii*")
+
+## convert string to int
+intermediate_files=$((intermediate_files))
+
+out_path="output/"
+out_path+=$output_fn
+out_path="$(echo -e "${out_path}" | tr -d '[:space:]')"
+
+## If necessary input files are found, run the thing
+if [[ -f $moving_im_file ]] && \
+   [[ -f $fixed_im_file ]] ; then
+
+  CaPTk_dir=/opt/captk/1.8.1/usr # path to install (in Docker container)
+
+  echo "$CONTAINER  Running CaPTk Preprocessing co-registration"
+  ${CaPTk_dir}/bin/Preprocessing \
+    -i "${moving_im_file}" \
+    -o "${out_path}" \
+    -rFI "${fixed_im_file}" \
+    -reg "${reg_type}" \
+    -rIS "${intermediate_files}"
+
+################# Finish up #################
+  STATUS=$?
+else
+  echo "$CONTAINER  Input files not found!"
+  exit 1
+fi
+
+# Check exit status
+if [[ $STATUS == 0 ]]
+  then
+    echo -e "$CONTAINER  Done!"
+
+  else
+    echo "$CONTAINER  command returned a non-zero exit code = [$STATUS]."
+    exit 1
+fi
+
+exit 0
