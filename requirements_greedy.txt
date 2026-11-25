@@ -1,0 +1,3 @@
+picsl_greedy==1.4.0.3
+SimpleITK==2.5.8
+numpy>=1.24

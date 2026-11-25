@@ -1,0 +1,2 @@
+flywheel-gear-toolkit==0.6.22
+flywheel-sdk==23.0.0

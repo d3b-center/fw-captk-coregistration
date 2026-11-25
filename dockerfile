@@ -1,23 +1,20 @@
-# Creates docker container
-#       original source:
-#           https://github.com/scitran-apps/fsl-bet/blob/master/Dockerfile
-#       modified by amf Nov 2022 for captk-coregistration gear
-#
+# Python 3.12: the interpreter picsl_greedy's and SimpleITK's pinned wheels are tested with here
+FROM python:3.12-slim-bookworm
 
-#############################################
-# Select the OS
-FROM cbica/captk:2021.03.29
-LABEL authors="CBICA_UPenn <software@cbica.upenn.edu>"
-
-#############################################
 # Setup default flywheel/v0 directory
-ENV FLYWHEEL=/flywheel/v0
-RUN mkdir -p ${FLYWHEEL}
+ENV FLYWHEEL="/flywheel/v0"
 WORKDIR ${FLYWHEEL}
-COPY run ${FLYWHEEL}/run
-COPY manifest.json ${FLYWHEEL}/manifest.json
 
-#############################################
+# Install required libraries: Greedy and SimpleITK at the versions the registration was checked with, then the gear's
+COPY requirements_greedy.txt requirements_main.txt $FLYWHEEL/
+RUN pip install --no-cache-dir -r $FLYWHEEL/requirements_greedy.txt
+RUN pip install --no-cache-dir -r $FLYWHEEL/requirements_main.txt
+RUN pip check
+
+# Copy main files into working directory
+COPY run.py manifest.json ${FLYWHEEL}/
+COPY gear_functions ${FLYWHEEL}/gear_functions
+
 # Configure entrypoint
-RUN chmod a+x /flywheel/v0/run
-ENTRYPOINT ["/flywheel/v0/run"]
+RUN chmod a+x $FLYWHEEL/run.py
+ENTRYPOINT ["python","/flywheel/v0/run.py"]
