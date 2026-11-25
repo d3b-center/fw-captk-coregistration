@@ -1,0 +1,31 @@
+# Python stuff
+*.egg-info
+.coverage
+__pycache__
+*.py[cod]
+coverage.xml
+cov.xml
+dist
+junit.xml
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Mac stuff
+.DS_Store
+
+# Editor specific stuff
+.vscode
+.idea/
+
+# Gear stuff
+config.json
+config.json.back
+.input_map.json
+
+# Imaging data and gear run directories: nothing computed from a cohort is tracked
+*.nii
+*.nii.gz
+input/
+output/
+work/
