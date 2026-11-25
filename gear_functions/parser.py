@@ -49,8 +49,9 @@ def parse_config(gear_context) -> GearConfig:
 
     dof = parse_registration_type(gear_context.config.get("registration_type") or DEFAULT_REGISTRATION_TYPE)
 
+    # `flyw gear config` writes integer options as strings ("1"); the engine writes numbers. Accept both, as bash's $(( )) did.
     intermediate_files = gear_context.config.get("intermediate_files", 0)
-    if intermediate_files not in (0, 1):
+    if str(intermediate_files) not in ("0", "1"):
         raise InputError(f"intermediate_files must be 0 or 1, not {intermediate_files!r}")
 
     output_file_name = gear_context.config.get("output_file_name") or DEFAULT_OUTPUT_FILE_NAME
@@ -63,6 +64,6 @@ def parse_config(gear_context) -> GearConfig:
         moving_path=paths["moving_image"],
         fixed_path=paths["fixed_image"],
         dof=dof,
-        intermediate_files=bool(intermediate_files),
+        intermediate_files=str(intermediate_files) == "1",
         output_file_name=output_file_name,
     )

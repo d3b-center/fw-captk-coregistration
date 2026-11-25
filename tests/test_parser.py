@@ -50,6 +50,12 @@ def test_an_output_name_without_nii_gz_is_refused(make_context):
         parse_config(make_context({"output_file_name": "registered.nii"}, INPUTS))
 
 
-def test_intermediate_files_must_be_0_or_1(make_context):
+@pytest.mark.parametrize("value, expected", [(0, False), (1, True), ("0", False), ("1", True)])
+def test_intermediate_files_may_be_a_number_or_the_string_flyw_writes(make_context, value, expected):
+    assert parse_config(make_context({"intermediate_files": value}, INPUTS)).intermediate_files is expected
+
+
+@pytest.mark.parametrize("bad", [2, "2", "yes", 1.5, True, -1])
+def test_intermediate_files_must_be_0_or_1(make_context, bad):
     with pytest.raises(InputError, match="intermediate_files must be 0 or 1"):
-        parse_config(make_context({"intermediate_files": 2}, INPUTS))
+        parse_config(make_context({"intermediate_files": bad}, INPUTS))
