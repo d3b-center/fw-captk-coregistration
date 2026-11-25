@@ -1,17 +1,18 @@
 {
   "name": "captk-coregistration",
   "label": "CaPTk - Preprocessing co-registration",
-  "description": "This package provides co-registration tools for image pre-processing.",
-  "author": "CBICA",
+  "description": "Registers a moving 3D NIfTI image to a fixed 3D NIfTI image with Greedy (rigid or affine, normalized mutual information, 100x50x5 iterations, image-centre initialization) and writes the moving image resliced onto the fixed image's grid, as CaPTk's Preprocessing -reg did. No bias correction is applied and deformable registration is not available. Greedy draws random sample jitter, so repeated runs differ by a fraction of a voxel.",
+  "author": "PICSL (Greedy), CBICA (CaPTk)",
   "maintainer": "D3b-TIRU <flywheel@d3b.center>",
-  "source": "https://github.com/d3b-center/fw-captk-coregistration", 
-  "url": "https://cbica.github.io/CaPTk/preprocessing_reg.html",
-  "version": "0.0.0",
+  "source": "https://github.com/d3b-center/fw-captk-coregistration",
+  "url": "https://github.com/pyushkevich/greedy",
+  "version": "0.1.0",
   "license": "Apache-2.0",
+  "command": "python run.py",
   "custom": {
     "gear-builder": {
       "category": "analysis",
-      "image": "chop.flywheel.io/captk-coregistration:0.0.0"
+      "image": "chop.flywheel.io/captk-coregistration:0.1.0"
     },
     "flywheel": {
       "suite": "CaPTk"
@@ -20,7 +21,7 @@
   "inputs": {
     "moving_image": {
       "base": "file",
-      "description": "Moving image (nifti) to register to the fixed image.",
+      "description": "Moving image (nifti, a single 3D volume) to register to the fixed image.",
       "optional": false,
       "type": {
         "enum": [
@@ -30,7 +31,7 @@
     },
     "fixed_image": {
       "base": "file",
-      "description": "Fixed image (nifti) to register the moving image to.",
+      "description": "Fixed image (nifti, a single 3D volume) to register the moving image to. The output is on this image's grid.",
       "optional": false,
       "type": {
         "enum": [
@@ -41,33 +42,26 @@
   },
   "config": {
     "registration_type": {
-      "description": "The kind of registration to perform (defaults to Affine).",
+      "description": "The kind of registration: 'Rigid' (6 degrees of freedom), 'Affine' (12), or 'Affine-6', 'Affine-7' (rigid plus isotropic scaling) or 'Affine-12'; not case-sensitive. Any other value, including 'Deformable', is refused (defaults to Affine).",
       "type": "string",
-      "default":"Affine"
+      "default": "Affine"
     },
     "intermediate_files": {
-      "description": "Whether the intermediate files are to be saved or not (defaults to 0).",
+      "description": "Set to 1 to also save the transformation matrix as affine_<moving>TO<fixed>_NMI.mat (defaults to 0).",
       "type": "integer",
-      "default":0
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0
     },
     "output_file_name": {
-      "description": "File name for registered image (defaults to output.nii.gz).",
+      "description": "File name for the registered image; it must end in .nii.gz (defaults to output.nii.gz).",
       "type": "string",
-      "default":"output.nii.gz"
+      "default": "output.nii.gz"
     }
   },
-  "environment":{
-    "CAPTK_VERSION":"1.8.1",
-    "HOME":"/root",
-    "HOSTNAME":"0b633f948575",
-    "LD_LIBRARY_PATH":"/opt/captk/1.8.1/usr/",
-    "MESA_GL_VERSION_OVERRIDE":"3.2",
-    "OLDPWD":"/opt/captk/1.8.1/usr",
-    "PATH":"/opt/captk/1.8.1/usr:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-    "PWD":"/opt/captk/1.8.1/usr",
-    "QT_GRAPHICSSYSTEM":"native",
-    "QT_X11_NO_MITSHM":"1",
-    "SHLVL":"1",
-    "TERM":"xterm"
+  "environment": {
+    "PATH": "/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PYTHON_VERSION": "3.12.16",
+    "FLYWHEEL": "/flywheel/v0"
   }
 }
